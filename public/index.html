@@ -1,47 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>VectorForge Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/imagetracerjs/1.2.6/imagetracer_v1.2.6.min.js"></script>
+    <style>
+        body { background: #050505; color: white; font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
+    </style>
 </head>
-<body class="bg-black text-white flex items-center justify-center min-h-screen">
+<body class="min-h-screen flex items-center justify-center p-6">
 
-    <div class="bg-gray-900 p-8 rounded-2xl w-80 text-center border border-gray-700">
-        <h1 class="text-2xl font-bold mb-4 text-cyan-400">VectorForge</h1>
-        <input type="file" id="fileInput" class="mb-4">
-        <img id="preview" class="hidden mb-4 max-h-32 mx-auto">
-        <button id="convertBtn" class="bg-cyan-600 px-4 py-2 rounded w-full">Convert to Vector</button>
-        <div id="loader" class="hidden mt-4 text-cyan-400 animate-pulse">OPTIMIZING...</div>
+    <div class="glass p-10 rounded-[2rem] w-full max-w-lg shadow-2xl text-center">
+        <h1 class="text-5xl font-extrabold mb-2 bg-gradient-to-br from-blue-400 to-purple-600 bg-clip-text text-transparent">VectorForge</h1>
+        <p class="text-gray-500 mb-10">Professional Vectorization Engine</p>
+
+        <form id="uploadForm" class="space-y-6">
+            <label class="block border-2 border-dashed border-gray-800 hover:border-blue-500 rounded-3xl p-12 cursor-pointer transition-all">
+                <input type="file" id="fileInput" name="image" class="hidden" accept="image/*">
+                <span id="labelTxt">Click to select image</span>
+            </label>
+            <button class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-bold transition-all">Process Vector</button>
+        </form>
+
+        <div id="loader" class="hidden mt-8">
+            <div class="h-2 bg-gray-800 rounded-full overflow-hidden"><div class="h-full bg-blue-500 animate-pulse w-full"></div></div>
+            <p class="mt-4 text-sm text-blue-400">Processing on Server...</p>
+        </div>
     </div>
 
     <script>
-        const btn = document.getElementById('convertBtn');
-        const loader = document.getElementById('loader');
-        const input = document.getElementById('fileInput');
-        const preview = document.getElementById('preview');
-
-        input.onchange = (e) => {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                preview.src = event.target.result;
-                preview.classList.remove('hidden');
-            };
-            reader.readAsDataURL(e.target.files[0]);
-        };
-
-        btn.onclick = () => {
-            if (!preview.src) return alert("Upload an image first!");
+        document.getElementById('uploadForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const loader = document.getElementById('loader');
             loader.classList.remove('hidden');
+
+            const formData = new FormData();
+            formData.append('image', document.getElementById('fileInput').files[0]);
+
+            const res = await fetch('/convert', { method: 'POST', body: formData });
+            const svg = await res.blob();
             
-            ImageTracer.imageToSVG(preview.src, (svgstr) => {
-                const a = document.createElement('a');
-                a.href = 'data:image/svg+xml;utf8,' + encodeURIComponent(svgstr);
-                a.download = 'vector.svg';
-                a.click();
-                loader.classList.add('hidden');
-            }, 'posterized2');
+            const url = URL.createObjectURL(svg);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'vectorized.svg';
+            a.click();
+            loader.classList.add('hidden');
         };
     </script>
 </body>
