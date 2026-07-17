@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/imagetracerjs/1.2.6/imagetracer_v1.2.6.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); }
@@ -33,30 +32,48 @@
         </div>
     </div>
 
-    <script>
-        const btn = document.getElementById('convertBtn');
-        const loader = document.getElementById('loader');
-        const input = document.getElementById('fileInput');
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/imagetracerjs/1.2.6/imagetracer_v1.2.6.min.js"></script>
+<script>
+    const btn = document.getElementById('convertBtn');
+    const loader = document.getElementById('loader');
+    const input = document.getElementById('fileInput');
+    const preview = document.getElementById('preview');
 
-        input.onchange = (e) => {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                document.getElementById('preview').src = event.target.result;
-                document.getElementById('preview').classList.remove('hidden');
-                document.getElementById('uploadText').classList.add('hidden');
-            };
-            reader.readAsDataURL(e.target.files[0]);
+    input.onchange = (e) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            preview.src = event.target.result;
+            preview.classList.remove('hidden');
+            document.getElementById('uploadText').classList.add('hidden');
         };
+        reader.readAsDataURL(e.target.files[0]);
+    };
 
-        btn.onclick = () => {
-            loader.classList.remove('hidden');
-            // Simulate professional processing delay
-            setTimeout(() => {
-                alert("Vectorization Complete! (In a real app, this would return your high-quality SVG blob)");
+    btn.onclick = () => {
+        if (!preview.src) return alert("Please upload an image first!");
+        
+        loader.classList.remove('hidden');
+
+        // Use ImageTracer to convert the image to colorful SVG
+        // 'posterized2' is a preset that keeps colors vibrant
+        ImageTracer.imageToSVG(
+            preview.src,
+            function(svgstr){
+                // Create a download link for the SVG
+                const blob = new Blob([svgstr], {type: 'image/svg+xml'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'vectorized-image.svg';
+                a.click();
+                
                 loader.classList.add('hidden');
-            }, 3000);
-        };
-    </script>
+            },
+            'posterized2' 
+        );
+    };
+</script>
+
 </body>
 </html>
 </html>
