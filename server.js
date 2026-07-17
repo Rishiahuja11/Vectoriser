@@ -32,17 +32,22 @@ app.post('/convert', upload.single('image'), async (req, res) => {
 
         // Perform vectorization
         imagetracer.imageToSVG(
-            imgData,
-            (svgstr) => {
-                res.set('Content-Type', 'image/svg+xml');
-                res.send(svgstr);
-                // Clean up the temporary file
-                fs.unlink(req.file.path, (err) => {
-                    if (err) console.error("Error deleting file:", err);
-                });
-            },
-            'posterized2'
-        );
+        imgData,
+    (svgstr) => {
+        res.set('Content-Type', 'image/svg+xml');
+        res.send(svgstr);
+        fs.unlink(req.file.path, (err) => { if (err) console.error(err); });
+    },
+    {
+        ltres: 0.1,        // Lower is more precise for lines
+        qtres: 1,          // Keeps shapes smooth
+        scale: 2,          // Increase scale for better perceived quality
+        pathomit: 0,       // Keep every detail, do not omit paths
+        numberofcolors: 256, // Allows for much higher color fidelity
+        colorquantcycles: 3 // Higher accuracy in color matching
+    }
+);
+
     } catch (error) {
         console.error("Conversion error:", error);
         res.status(500).send('Processing failed');
