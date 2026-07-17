@@ -8,17 +8,26 @@ const upload = multer({ dest: 'uploads/' });
 app.use(express.static('public'));
 
 app.post('/convert', upload.single('image'), (req, res) => {
-    if (!req.file) return res.status(400).send('No file');
+    if (!req.file) return res.status(400).send('No file uploaded');
     
-    // Read the file and process it
-    const imgData = fs.readFileSync(req.file.path, 'base64');
-    const imgUrl = `data:image/jpeg;base64,${imgData}`;
-
-    imagetracer.imageToSVG(imgUrl, (svgstr) => {
-        res.set('Content-Type', 'image/svg+xml');
-        res.send(svgstr);
-        fs.unlinkSync(req.file.path); // Clean up
-    }, 'posterized2');
+    try {
+        // Trace the image
+        imagetracer.imageToSVG(
+            req.file.path, 
+            (svgstr) => {
+                res.set('Content-Type', 'image/svg+xml');
+                res.send(svgstr);
+                // Clean up the file
+                fs.unlink(req.file.path, (err) => { if(err) console.error(err); });
+            }, 
+            'posterized2'
+        );
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Processing failed');
+        // Clean up even if it fails
+        if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    }
 });
 
 app.listen(process.env.PORT || 3000);
