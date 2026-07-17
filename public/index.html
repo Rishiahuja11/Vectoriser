@@ -1,18 +1,35 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>SVG Vectorizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 50px; }
-        .box { border: 2px dashed #ccc; padding: 40px; text-align: center; width: 300px; }
+        .loader { border-top-color: #3498db; animation: spinner 1.5s linear infinite; }
+        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body>
-    <h1>Vector Converter</h1>
-    <form action="/convert" method="POST" enctype="multipart/form-data" class="box">
-        <input type="file" name="image" accept="image/*" required>
-        <br><br>
-        <button type="submit">Convert to Vector</button>
-    </form>
+<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center">
+
+    <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl border border-gray-700 w-96 text-center">
+        <h1 class="text-3xl font-bold mb-6 text-cyan-400">VectorForge</h1>
+        
+        <form id="uploadForm" class="space-y-4">
+            <div class="border-2 border-dashed border-gray-500 p-6 rounded-lg hover:border-cyan-400 transition-colors">
+                <input type="file" id="imageInput" accept="image/*" class="w-full text-sm text-gray-400 file:bg-cyan-500 file:text-white file:rounded-full file:border-0 file:px-4 file:py-2">
+            </div>
+            <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-500 py-2 rounded-lg font-semibold transition-all">Convert Now</button>
+        </form>
+
+        <div id="loader" class="hidden mt-6 flex justify-center">
+            <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').onsubmit = async (e) => {
+            e.preventDefault();
+            document.getElementById('loader').classList.remove('hidden');
+            // Add fetch logic to connect to your /convert route here
+        };
+    </script>
 </body>
 </html>
