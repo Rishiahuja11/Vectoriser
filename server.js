@@ -2,40 +2,54 @@ const express = require('express');
 const multer = require('multer');
 const imagetracer = require('imagetracerjs');
 const fs = require('fs');
-const { createCanvas, loadImage } = require('canvas'); // Import canvas
+const { createCanvas, loadImage, Image } = require('canvas');
+
+// Set up the global Image object for imagetracerjs
+global.Image = Image;
+
 const app = express();
 const upload = multer({ dest: 'uploads/' });
-
-// Define a global Image object for ImageTracer
-global.Image = Image; 
-// Note: Some versions of imagetracer might require more mocking, 
-// but often just providing the canvas context is enough.
 
 app.use(express.static('public'));
 
 app.post('/convert', upload.single('image'), async (req, res) => {
-    if (!req.file) return res.status(400).send('No file');
+    if (!req.file) return res.status(400).send('No file uploaded');
     
     try {
-        // Use the canvas library to load the image properly
+        // Load the image into a canvas environment
         const img = await loadImage(req.file.path);
         const canvas = createCanvas(img.width, img.height);
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0);
 
-        // Convert the canvas to a string for tracer
+        // Get the data URL for the tracer
         const imgData = canvas.toDataURL();
 
-        imagetracer.imageToSVG(imgData, (svgstr) => {
-            res.set('Content-Type', 'image/svg+xml');
-            res.send(svgstr);
-            fs.unlinkSync(req.file.path);
-        }, 'posterized2');
+        // Perform vectorization
+        imagetracer.imageToSVG(
+            imgData,
+            (svgstr) => {
+                res.set('Content-Type', 'image/svg+xml');
+                res.send(svgstr);
+                // Clean up the temporary file
+                fs.unlink(req.file.path, (err) => {
+                    if (err) console.error("Error deleting file:", err);
+                });
+            },
+            'posterized2'
+        );
     } catch (error) {
-        console.error(error);
+        console.error("Conversion error:", error);
         res.status(500).send('Processing failed');
+        // Clean up even if conversion fails
+        if (fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+        }
     }
 });
 
-app.listen(process.env.PORT || 3000);
-        
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
+    
