@@ -83,6 +83,55 @@
     </script>
 </body>
 </html>
+    <script>
+        const btn = document.getElementById('convertBtn');
+        const loader = document.getElementById('loader');
+        const input = document.getElementById('fileInput');
+        const preview = document.getElementById('preview');
+
+        input.onchange = (e) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                preview.src = event.target.result;
+                preview.classList.remove('hidden');
+                document.getElementById('uploadText').classList.add('hidden');
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        };
+
+        btn.onclick = () => {
+            if (!preview.src) return alert("Please upload an image first!");
+            loader.classList.remove('hidden');
+
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+
+            img.onload = () => {
+                const scale = Math.min(800 / img.width, 1);
+                canvas.width = img.width * scale;
+                canvas.height = img.height * scale;
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                ImageTracer.imageToSVG(
+                    canvas.toDataURL('image/jpeg', 0.8),
+                    function(svgstr) {
+                        const blob = new Blob([svgstr], {type: 'image/svg+xml'});
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'vectorized-image.svg';
+                        a.click();
+                        loader.classList.add('hidden');
+                    },
+                    'posterized2'
+                );
+            };
+            img.src = preview.src;
+        };
+    </script>
+</body>
+</html>
     const btn = document.getElementById('convertBtn');
     const loader = document.getElementById('loader');
     const input = document.getElementById('fileInput');
